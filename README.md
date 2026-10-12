@@ -62,7 +62,7 @@ cd /run/media/system/DadosBazzite/projetos/Virtual-Mouse-main
 ./iniciar.sh
 ```
 
-O script entra na pasta do projeto, exporta `XAUTHORITY="$HOME/.Xauthority"` e executa `python "Virtual Mouse.py"`. O nome do arquivo permanece assim para o atalho continuar válido.
+O script entra na pasta do projeto, exporta `XAUTHORITY="$HOME/.Xauthority"` e executa `python Gestum.py`.
 
 Na primeira linha útil do terminal deve aparecer a câmera escolhida, o tamanho da tela e `Gestum iniciado!`. A janela se chama Gestum. Feche com `q` ou Esc nessa janela.
 
@@ -72,7 +72,7 @@ Luz de frente e fundo simples deixam a mão mais estável. Com duas pessoas no q
 
 ## Configuração
 
-Os valores ficam no início de `Virtual Mouse.py`.
+Os valores ficam no início de `Gestum.py`.
 
 | Constante | Função | Valor |
 | --- | --- | --- |
