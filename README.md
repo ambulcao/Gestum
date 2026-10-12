@@ -2,7 +2,7 @@
 
 Mouse controlado por gestos da mão, pela câmera.
 
-O que faz • Gestos • Requisitos • Rodar nesta máquina • Configuração • Uso • Operação
+O que faz • Gestos • Requisitos • Rodar nesta máquina • Configuração • Uso • Operação • Testes
 
 Python OpenCV MediaPipe GTK libei GNOME
 
@@ -106,3 +106,13 @@ Se a câmera não abrir, outra instância pode estar segurando `/dev/video1`. En
 Um aviso `Pipe quebrado` da libei na subida pode ocorrer uma vez e o cursor seguir funcionando. Se aparecer `Cursor do Wayland indisponível`, o movimento fica só no ponteiro do X11.
 
 A imagem da câmera não é enviada para fora. Os modelos de mão e de rosto rodam no processo local.
+
+## Testes
+
+O projeto não tinha testes. Há 93 em `tests/`. Eles simulam câmera, MediaPipe, janela e mouse, então nada foi exercitado com a webcam de verdade. 76 passam e 17 falham de propósito: marcam bugs já conhecidos, para a correção seguir o caderno em `doc/caderno-de-testes.md`.
+
+Para rodar:
+
+```bash
+python3 -m pytest tests -q -rx
+```

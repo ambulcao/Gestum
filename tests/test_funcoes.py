@@ -226,3 +226,61 @@ def test_lista_do_painel_cabe_acima_da_linha_de_estado(ns):
     linhas = ns["_gestos_do_painel"]()
     fim = 36 + 34 * len(linhas) + 31  # 31 px das duas linhas extras da rolagem
     assert fim <= ns["hCam"] - 46
+
+
+# ---------------------------------------------------------------- libei (PonteiroWayland)
+# Números dos eventos conferidos com ei_event_type_to_string() da libei 1.6.0:
+# 5=DEVICE_ADDED, 6=DEVICE_REMOVED, 7=DEVICE_PAUSED, 8=DEVICE_RESUMED.
+
+from unittest.mock import MagicMock  # noqa: E402
+
+DISPOSITIVO = 0x1234
+
+
+def _ponteiro(ns, tipo_evento):
+    cls = ns["PonteiroWayland"]
+    p = cls.__new__(cls)
+    p.ok, p.emulando, p.ei, p.abs, p._seq = True, True, 0x1, None, 1
+    p.rel = DISPOSITIVO
+    lib = MagicMock()
+    lib.ei_event_get_type.return_value = tipo_evento
+    lib.ei_event_get_device.return_value = DISPOSITIVO
+    lib.ei_device_has_capability.side_effect = lambda dev, cap: cap == 1
+    lib.ei_device_ref.side_effect = lambda dev: dev
+    lib.ei_get_event.return_value = None  # fila de eventos vazia
+    p.lib = lib
+    return p
+
+
+def test_libei_resumed_comeca_a_emular(ns):
+    p = _ponteiro(ns, 8)
+    p.emulando = False
+    p._tratar(0xE)
+    assert p.emulando is True
+    p.lib.ei_device_start_emulating.assert_called_once_with(DISPOSITIVO, 1)
+
+
+@pytest.mark.xfail(strict=True, reason="BUG-009: DEVICE_PAUSED (7) marca emulando=True")
+def test_libei_paused_para_de_emular(ns):
+    p = _ponteiro(ns, 7)
+    p._tratar(0xE)
+    assert p.emulando is False
+
+
+@pytest.mark.xfail(strict=True, reason="BUG-009: DEVICE_REMOVED (6) é ignorado e o dispositivo fica em uso")
+def test_libei_removed_descarta_o_dispositivo(ns):
+    p = _ponteiro(ns, 6)
+    p._tratar(0xE)
+    assert p.rel is None
+
+
+def test_libei_rolar_converte_cliques_em_120_unidades(ns):
+    p = _ponteiro(ns, 0)
+    assert p.rolar(2) is True
+    p.lib.ei_device_scroll_discrete.assert_called_once_with(DISPOSITIVO, 0, -240)
+
+
+def test_libei_rolar_zero_nao_envia(ns):
+    p = _ponteiro(ns, 0)
+    assert p.rolar(0) is False
+    p.lib.ei_device_scroll_discrete.assert_not_called()
