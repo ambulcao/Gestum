@@ -27,10 +27,12 @@ from Xlib.ext.xtest import fake_input
 
 # Parâmetros
 wCam, hCam = 640, 480
-preview_scale = 2  # A janela mostra o quadro em dobro
+preview_scale = 2  # A câmera é mostrada em dobro
 frameR = 8  # Margem fina: a detecção usa quase o quadro inteiro
 frameR_top = 8
 painel_largura = 420  # Coluna dos comandos, fora da imagem da câmera
+tela_max_largura = 1920  # A janela precisa caber numa tela Full HD
+tela_max_altura = 1080
 smoothening = 3
 scroll_sensitivity = 3  # Cliques por quadro no extremo da área. O teto é 10
 scroll_threshold = 75  # Distância máxima para ativar a rolagem
@@ -192,10 +194,17 @@ class CameraWindow:
         return False
 
     def show(self, bgr):
-        if preview_scale != 1:
-            bgr = cv2.resize(
-                bgr, None, fx=preview_scale, fy=preview_scale, interpolation=cv2.INTER_LINEAR
-            )
+        camera = bgr[:, :wCam]
+        painel = bgr[:, wCam:]
+        cam_h = min(hCam * preview_scale, tela_max_altura)
+        cam_w = min(wCam * preview_scale, tela_max_largura - max(1, painel.shape[1]))
+        painel_w = min(painel.shape[1] * preview_scale, tela_max_largura - cam_w)
+        camera = cv2.resize(camera, (cam_w, cam_h), interpolation=cv2.INTER_LINEAR)
+        if painel.size and painel_w > 0:
+            painel = cv2.resize(painel, (painel_w, cam_h), interpolation=cv2.INTER_LINEAR)
+            bgr = np.hstack((camera, painel))
+        else:
+            bgr = camera
         rgb = cv2.cvtColor(bgr, cv2.COLOR_BGR2RGB)
         height, width = rgb.shape[:2]
         self._bytes = GLib.Bytes.new(rgb.tobytes())

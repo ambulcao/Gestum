@@ -251,10 +251,11 @@ def test_falha_isolada_de_leitura_nao_encerra_o_programa(gestum):
 
 def test_janela_mostra_camera_e_painel_em_dobro(gestum):
     _, reg, _ = gestum([quadro(MOVER)])
-    assert reg.pixbufs[0] == ((640 + 420) * 2, 480 * 2)
+    largura, altura = reg.pixbufs[0]
+    assert altura == 480 * 2
+    assert largura == 1920
 
 
-@pytest.mark.xfail(strict=True, reason="BUG-004: janela de 2120 px não cabe numa tela Full HD")
 def test_janela_cabe_numa_tela_full_hd(gestum):
     _, reg, _ = gestum([quadro(MOVER)])
     largura, altura = reg.pixbufs[0]

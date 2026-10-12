@@ -12,7 +12,7 @@ O Gestum lê a câmera, acompanha a mão e transforma cada pose em movimento, cl
 
 | Recurso | Descrição |
 | --- | --- |
-| Prévia | Janela GTK 3. A câmera ocupa 1280×960 e os comandos ficam numa coluna à direita |
+| Prévia | Janela GTK 3, no máximo 1920×1080. A câmera ocupa 1280×960 e os comandos ficam na coluna ao lado |
 | Mão | MediaPipe Tasks localiza até duas mãos e desenha só a escolhida |
 | Pessoa mais perto | O rosto maior é a PESSOA 1. A mão maior, quando é bem maior que a outra, é a que comanda |
 | Cursor | O deslocamento da ponta do dedo move o ponteiro. Cada pixel da mão vale 8 pixels na tela |
@@ -77,7 +77,7 @@ Os valores ficam no início de `Gestum.py`.
 | Constante | Função | Valor |
 | --- | --- | --- |
 | `wCam`, `hCam` | Resolução da captura | 640×480 |
-| `preview_scale` | Ampliação da janela | 2 |
+| `preview_scale` | Ampliação da câmera. A janela inteira continua dentro de 1920×1080 | 2 |
 | `frameR`, `frameR_top` | Margem da área de detecção | 8 px. O quadro da câmera fica quase todo livre |
 | `cursor_gain` | Pixels do cursor por pixel da mão | 8 |
 | `click_cooldown` | Intervalo mínimo entre cliques | 0,3 s |
@@ -109,7 +109,7 @@ A imagem da câmera não é enviada para fora. Os modelos de mão e de rosto rod
 
 ## Testes
 
-O projeto não tinha testes. Há 93 em `tests/`. Eles simulam câmera, MediaPipe, janela e mouse, então nada foi exercitado com a webcam de verdade. 86 passam e 7 falham de propósito: marcam bugs já conhecidos, para a correção seguir o caderno em `doc/caderno-de-testes.md`.
+O projeto não tinha testes. Há 93 em `tests/`. Eles simulam câmera, MediaPipe, janela e mouse, então nada foi exercitado com a webcam de verdade. 87 passam e 6 falham de propósito: marcam bugs já conhecidos, para a correção seguir o caderno em `doc/caderno-de-testes.md`.
 
 Para rodar:
 
