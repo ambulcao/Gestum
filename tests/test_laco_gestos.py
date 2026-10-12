@@ -140,22 +140,20 @@ def test_rolagem_mao_embaixo_rola_para_baixo(gestum):
     assert reg.rodinha(5) and not reg.rodinha(4)
 
 
-@pytest.mark.xfail(strict=True, reason="BUG-001: até 200 cliques de rodinha por quadro")
 def test_rolagem_no_topo_nao_passa_de_10_cliques_por_quadro(gestum):
     _, reg, _ = gestum([_rolagem_em(8)])
     assert len(reg.rodinha(4)) <= 10, f"{len(reg.rodinha(4))} cliques num único quadro"
 
 
-@pytest.mark.xfail(strict=True, reason="BUG-001: 1 s de mão no alto gera ~6000 cliques")
 def test_um_segundo_de_rolagem_maxima_fica_abaixo_de_100_cliques(gestum):
     _, reg, _ = gestum([_rolagem_em(8)] * 30)
     assert len(reg.rodinha(4)) <= 100, f"{len(reg.rodinha(4))} cliques em 1 s"
 
 
 def test_rolagem_logo_fora_da_zona_morta_ja_gera_varios_cliques(gestum):
-    """Evidência do BUG-001: a 3% da zona morta já são 14 cliques por quadro."""
+    """Logo abaixo da zona morta a rolagem anda um clique por quadro."""
     _, reg, _ = gestum([_rolagem_em(300)])  # 62,9%
-    assert len(reg.rodinha(5)) == 14
+    assert len(reg.rodinha(5)) == 1
 
 
 # --------------------------------------------------------------------------

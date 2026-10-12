@@ -61,8 +61,8 @@ def test_zona_morta_inclui_os_limites(ns, pos):
 
 
 @pytest.mark.parametrize("pos,direcao,cliques", [
-    (39.99, "up", 2), (35, "up", 25), (0, "up", 200),
-    (60.01, "down", -2), (65, "down", -25), (100, "down", -200),
+    (39.99, "up", 1), (35, "up", 1), (0, "up", 3),
+    (60.01, "down", -1), (65, "down", -1), (100, "down", -3),
 ])
 def test_velocidade_da_rolagem(ns, monkeypatch, pos, direcao, cliques):
     chamadas = []
@@ -98,7 +98,6 @@ def test_mapeamento_da_altura_para_porcentagem(ns):
     assert interp(193.6) == pytest.approx(40) and interp(286.4) == pytest.approx(60)
 
 
-@pytest.mark.xfail(strict=True, reason="Melhoria M-04: scroll_sensitivity é documentada mas não é usada")
 def test_scroll_sensitivity_altera_a_velocidade(ns, monkeypatch):
     chamadas = []
     monkeypatch.setitem(ns, "scroll_wheel", chamadas.append)

@@ -32,7 +32,7 @@ frameR = 8  # Margem fina: a detecção usa quase o quadro inteiro
 frameR_top = 8
 painel_largura = 420  # Coluna dos comandos, fora da imagem da câmera
 smoothening = 3
-scroll_sensitivity = 3  # Reduzido para um controle mais fino
+scroll_sensitivity = 3  # Cliques por quadro no extremo da área. O teto é 10
 scroll_threshold = 75  # Distância máxima para ativar a rolagem
 
 # Parâmetros da zona morta da rolagem
@@ -732,42 +732,57 @@ def scroll_wheel(clicks):
         display.close()
 
 
+_cliques_recentes = deque()  # (instante, quantidade) na última janela de 1 s
+LIMITE_POR_QUADRO = 10
+LIMITE_POR_SEGUNDO = 100
+
+
+def _cliques_da_distancia(distancia):
+    """Um clique na borda da zona morta e scroll_sensitivity no extremo, com teto de 10."""
+    teto = max(1, min(LIMITE_POR_QUADRO, int(scroll_sensitivity)))
+    fracao = min(max(distancia, 0), 40) / 40
+    return max(1, min(teto, int(round(1 + fracao * (teto - 1)))))
+
+
+def _cliques_permitidos(pedido):
+    """Respeita o teto do quadro e o de 100 cliques na última janela de um segundo."""
+    agora = time.time()
+    pedido = max(0, min(LIMITE_POR_QUADRO, int(pedido)))
+    while _cliques_recentes and agora - _cliques_recentes[0][0] >= 1:
+        _cliques_recentes.popleft()
+    usado = sum(quantidade for _, quantidade in _cliques_recentes)
+    pedido = min(pedido, max(0, LIMITE_POR_SEGUNDO - usado))
+    if pedido:
+        _cliques_recentes.append((agora, pedido))
+    return pedido
+
+
 def perform_smart_scroll(scroll_position):
     """Rola com zona morta e velocidade variável."""
-    global last_scroll_time
-
-    current_time = time.time()
-
-    # Dentro da zona morta não há rolagem
     if scroll_deadzone_min <= scroll_position <= scroll_deadzone_max:
-        return "deadzone"  # Sem rolagem na zona morta
+        return "deadzone"
 
-    # A velocidade depende da distância até a zona morta
-    if scroll_position < scroll_deadzone_min:  # Rolar para cima
-        # 0% é o mais rápido e 40% é o mais lento
-        distance_from_center = scroll_deadzone_min - scroll_position
-        scroll_speed = max(2, int(distance_from_center*5))  # De 2 a alguns cliques
+    if scroll_position < scroll_deadzone_min:
+        distancia = scroll_deadzone_min - scroll_position
+        sentido = 1
+        direcao = "up"
+        rotulo = "ROLAR PARA CIMA"
+    elif scroll_position > scroll_deadzone_max:
+        distancia = scroll_position - scroll_deadzone_max
+        sentido = -1
+        direcao = "down"
+        rotulo = "ROLAR PARA BAIXO"
+    else:
+        return "none"
 
-        try:
-            scroll_wheel(scroll_speed)
-            log_action("ROLAR PARA CIMA", f"Velocidade: {scroll_speed}, Pos: {scroll_position:.1f}%")
-            return "up"
-        except Exception as e:
-            log_action("ERRO NA ROLAGEM", str(e))
-
-    elif scroll_position > scroll_deadzone_max:  # Rolar para baixo
-        # 60% é o mais lento e 100% é o mais rápido
-        distance_from_center = scroll_position - scroll_deadzone_max
-        scroll_speed = max(2, int(distance_from_center*5))  # De 2 a alguns cliques
-
-        try:
-            scroll_wheel(-scroll_speed)
-            log_action("ROLAR PARA BAIXO", f"Velocidade: {scroll_speed}, Pos: {scroll_position:.1f}%")
-            return "down"
-        except Exception as e:
-            log_action("ERRO NA ROLAGEM", str(e))
-
-    return "none"
+    cliques = _cliques_permitidos(_cliques_da_distancia(distancia))
+    try:
+        scroll_wheel(sentido * cliques)
+        log_action(rotulo, f"Velocidade: {cliques}, Pos: {scroll_position:.1f}%")
+        return direcao
+    except Exception as e:
+        log_action("ERRO NA ROLAGEM", str(e))
+        return "none"
 
 
 def area_mao(mao):

@@ -82,7 +82,7 @@ Os valores ficam no início de `Gestum.py`.
 | `cursor_gain` | Pixels do cursor por pixel da mão | 8 |
 | `click_cooldown` | Intervalo mínimo entre cliques | 0,3 s |
 | `scroll_deadzone_min`, `scroll_deadzone_max` | Faixa em que a rolagem não anda | 40%–60% |
-| `scroll_sensitivity` | Velocidade da rolagem | 3 |
+| `scroll_sensitivity` | Cliques por quadro no extremo da rolagem. O teto é 10 por quadro e 100 por segundo | 3 |
 
 A confiança mínima da mão é 0,8. A do rosto é 0,5. As duas ficam em `HandTrackingModule.py`.
 
@@ -109,7 +109,7 @@ A imagem da câmera não é enviada para fora. Os modelos de mão e de rosto rod
 
 ## Testes
 
-O projeto não tinha testes. Há 93 em `tests/`. Eles simulam câmera, MediaPipe, janela e mouse, então nada foi exercitado com a webcam de verdade. 76 passam e 17 falham de propósito: marcam bugs já conhecidos, para a correção seguir o caderno em `doc/caderno-de-testes.md`.
+O projeto não tinha testes. Há 93 em `tests/`. Eles simulam câmera, MediaPipe, janela e mouse, então nada foi exercitado com a webcam de verdade. 79 passam e 14 falham de propósito: marcam bugs já conhecidos, para a correção seguir o caderno em `doc/caderno-de-testes.md`.
 
 Para rodar:
 
