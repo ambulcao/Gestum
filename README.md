@@ -12,7 +12,7 @@ O Gestum lê a câmera, acompanha a mão e transforma cada pose em movimento, cl
 
 | Recurso | Descrição |
 | --- | --- |
-| Prévia | Janela GTK 3 com a câmera em 1280×960 (captura 640×480, ampliada 2×) e o guia de gestos |
+| Prévia | Janela GTK 3. A câmera ocupa 1280×960 e os comandos ficam numa coluna à direita |
 | Mão | MediaPipe Tasks localiza até duas mãos e desenha só a escolhida |
 | Pessoa mais perto | O rosto maior é a PESSOA 1. A mão maior, quando é bem maior que a outra, é a que comanda |
 | Cursor | O deslocamento da ponta do dedo move o ponteiro. Cada pixel da mão vale 8 pixels na tela |
@@ -78,7 +78,7 @@ Os valores ficam no início de `Gestum.py`.
 | --- | --- | --- |
 | `wCam`, `hCam` | Resolução da captura | 640×480 |
 | `preview_scale` | Ampliação da janela | 2 |
-| `frameR`, `frameR_top` | Margem da área de detecção | 80 px nas laterais e embaixo, 30 px em cima |
+| `frameR`, `frameR_top` | Margem da área de detecção | 8 px. O quadro da câmera fica quase todo livre |
 | `cursor_gain` | Pixels do cursor por pixel da mão | 8 |
 | `click_cooldown` | Intervalo mínimo entre cliques | 0,3 s |
 | `scroll_deadzone_min`, `scroll_deadzone_max` | Faixa em que a rolagem não anda | 40%–60% |
@@ -91,8 +91,8 @@ A confiança mínima da mão é 0,8. A do rosto é 0,5. As duas ficam em `HandTr
 1. Abra o Gestum com `./iniciar.sh` e confira se a sua mão aparece dentro da área magenta.
 2. Deixe a mão aberta enquanto posiciona.
 3. Levante só o indicador para mover o cursor.
-4. Para o clique esquerdo, levante indicador e médio, mire e junte as pontas. O rótulo passa de MIRAR para CLIQUE.
-5. Use os outros gestos da tabela. O guia na própria imagem repete a pose de cada um.
+4. Para o clique esquerdo, levante indicador e médio, mire e junte as pontas. O painel passa de Mirando para Clique esquerdo.
+5. Use os outros gestos da tabela. O guia fica na coluna à direita da câmera, e a linha ativa fica marcada.
 6. Pressione `q` na janela para encerrar. O programa solta o botão do arraste ao sair.
 
 ## Operação

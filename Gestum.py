@@ -28,8 +28,9 @@ from Xlib.ext.xtest import fake_input
 # Parâmetros
 wCam, hCam = 640, 480
 preview_scale = 2  # A janela mostra o quadro em dobro
-frameR = 80  # Margem da área útil, reduzida para cobrir mais da imagem
-frameR_top = 30  # Margem de cima menor, para alcançar o canto inferior
+frameR = 8  # Margem fina: a detecção usa quase o quadro inteiro
+frameR_top = 8
+painel_largura = 420  # Coluna dos comandos, fora da imagem da câmera
 smoothening = 3
 scroll_sensitivity = 3  # Reduzido para um controle mais fino
 scroll_threshold = 75  # Distância máxima para ativar a rolagem
@@ -580,44 +581,22 @@ def calculate_distance(point1, point2):
     return math.sqrt((point1[0] - point2[0]) ** 2 + (point1[1] - point2[1]) ** 2)
 
 
-def draw_scroll_bar(img, scroll_pos):
-    """Desenha a barra de rolagem com a zona morta destacada."""
-    bar_x = wCam - 35  # Afastada da borda para ficar mais visível
-    bar_y_start = 100  # Abaixo dos controles, para não sobrepor o texto
-    bar_height = 300  # Mais alta, para ajustar a posição com precisão
-    bar_width = 20  # Mais larga
-
-    # Fundo da barra
+def draw_scroll_bar(img, scroll_pos, bar_x, bar_y_start, bar_height, bar_width=14):
+    """Desenha a barra de rolagem no painel, fora da câmera."""
     cv2.rectangle(img, (bar_x, bar_y_start), (bar_x + bar_width, bar_y_start + bar_height),
                   (60, 60, 60), -1)
-
-    # Zona morta (faixa de 40% a 60%)
     deadzone_start = int((scroll_deadzone_min / 100) * bar_height)
     deadzone_end = int((scroll_deadzone_max / 100) * bar_height)
     cv2.rectangle(img, (bar_x, bar_y_start + deadzone_start),
                   (bar_x + bar_width, bar_y_start + deadzone_end),
-                  (0, 100, 100), -1)  # Amarelo escuro da zona morta
-
-    # Contorno
+                  (0, 100, 100), -1)
     cv2.rectangle(img, (bar_x, bar_y_start), (bar_x + bar_width, bar_y_start + bar_height),
-                  (255, 255, 255), 2)
-
-    # Indicador da posição atual
+                  (255, 255, 255), 1)
     pos_height = int((scroll_pos / 100) * bar_height)
-    indicator_size = 15
+    indicator_size = 12
     cv2.rectangle(img, (bar_x - 2, bar_y_start + pos_height - indicator_size // 2),
                   (bar_x + bar_width + 2, bar_y_start + pos_height + indicator_size // 2),
                   (0, 255, 0), -1)
-
-    # Texto da porcentagem
-    cv2.putText(img, f"{int(scroll_pos)}%", (bar_x - 45, bar_y_start + pos_height + 5),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-
-    # Rótulo da zona morta
-    cv2.putText(img, "ZONA", (bar_x - 45, bar_y_start + deadzone_start + 10),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0, 150, 150), 1)
-    cv2.putText(img, "MORTA", (bar_x - 45, bar_y_start + deadzone_start + 22),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0, 150, 150), 1)
 
 
 _fontes = {}
@@ -664,38 +643,61 @@ def _desenhar_mao(desenho, x, y, dedos, cor, pinca=False):
         desenho.ellipse((ponta[0] - 2, ponta[1] - 2, ponta[0] + 2, ponta[1] + 2), fill=cor if ligado else apagado)
 
 
-def draw_controls_guide(img):
-    """Desenha o guia com os gestos atuais e uma mão ao lado de cada um."""
-    overlay = img.copy()
-    cv2.rectangle(overlay, (5, 5), (630, 348), (0, 0, 0), -1)
-    cv2.addWeighted(overlay, 0.82, img, 0.18, 0, img)
-
-    # Polegar, indicador, médio, anelar, mínimo. A pinça junta indicador e polegar.
-    gestos = [
-        ("Mão aberta: parado", (255, 255, 255), (1, 1, 1, 1, 1), False),
-        ("Indicador: mover o cursor", (0, 255, 255), (0, 1, 0, 0, 0), False),
-        ("Indicador + médio juntos: clique esquerdo", (0, 255, 0), (0, 1, 1, 0, 0), False),
-        ("Indicador + médio + anelar: clique direito", (0, 100, 255), (0, 1, 1, 1, 0), False),
-        ("Médio + anelar + mínimo: clique duplo", (255, 0, 255), (0, 0, 1, 1, 1), False),
-        ("Médio + anelar: rolagem", (100, 255, 100), (0, 0, 1, 1, 0), False),
-        ("Indicador + polegar, os outros fechados: arrastar", (255, 255, 0), (1, 1, 0, 0, 0), True),
+def _gestos_do_painel():
+    """Polegar, indicador, médio, anelar, mínimo. A pinça junta indicador e polegar."""
+    return [
+        ("parado", "Mão aberta: parado", (255, 255, 255), (1, 1, 1, 1, 1), False),
+        ("mover", "Indicador: mover o cursor", (0, 255, 255), (0, 1, 0, 0, 0), False),
+        ("esquerdo", "Indicador + médio juntos: clique esquerdo", (0, 255, 0), (0, 1, 1, 0, 0), False),
+        ("direito", "Indicador + médio + anelar: clique direito", (0, 100, 255), (0, 1, 1, 1, 0), False),
+        ("duplo", "Médio + anelar + mínimo: clique duplo", (255, 0, 255), (0, 0, 1, 1, 1), False),
+        ("rolagem", "Médio + anelar: rolagem", (100, 255, 100), (0, 0, 1, 1, 0), False),
+        ("arraste", "Indicador + polegar, os outros fechados: arrastar", (255, 255, 0), (1, 1, 0, 0, 0), True),
     ]
-    imagem = Image.fromarray(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+
+
+def desenhar_painel(fps):
+    """Coluna de comandos ao lado da câmera. A imagem da detecção fica sem esse texto."""
+    painel = np.full((hCam, painel_largura, 3), 18, dtype=np.uint8)
+    barra_x = painel_largura - 26
+    draw_scroll_bar(painel, scroll_position, barra_x, 40, hCam - 88)
+
+    imagem = Image.fromarray(cv2.cvtColor(painel, cv2.COLOR_BGR2RGB))
     desenho = ImageDraw.Draw(imagem)
-    desenho.text((12, 6), "GESTUM", font=_fonte(18), fill=(255, 255, 255))
-    y = 32
-    for texto, cor_bgr, dedos, pinca in gestos:
+    desenho.text((12, 8), "GESTUM", font=_fonte(18), fill=(255, 255, 255))
+    y = 36
+    for chave, texto, cor_bgr, dedos, pinca in _gestos_do_painel():
         cor = (int(cor_bgr[2]), int(cor_bgr[1]), int(cor_bgr[0]))
+        if gesto_atual == chave:
+            desenho.rectangle((4, y - 2, barra_x - 10, y + 32), fill=(40, 40, 40))
         _desenhar_mao(desenho, 8, y, dedos, cor, pinca)
-        desenho.text((46, y + 8), texto, font=_fonte(15), fill=cor)
-        y += 36
-        if texto.startswith("Médio + anelar:"):
-            desenho.text((46, y), "Mão no alto: rolar para cima", font=_fonte(14), fill=cor)
+        desenho.text((46, y + 8), texto, font=_fonte(13), fill=cor)
+        y += 34
+        if chave == "rolagem":
+            desenho.text((46, y), "Mão no alto: rolar para cima", font=_fonte(12), fill=cor)
+            y += 15
+            desenho.text((46, y), "Mão embaixo: rolar para baixo", font=_fonte(12), fill=cor)
             y += 16
-            desenho.text((46, y), "Mão embaixo: rolar para baixo", font=_fonte(14), fill=cor)
-            y += 18
-    desenho.text((12, y + 4), "Pressione 'q' para sair", font=_fonte(15), fill=(255, 255, 255))
-    img[:] = cv2.cvtColor(np.asarray(imagem), cv2.COLOR_RGB2BGR)
+    estados = {
+        "parado": "Parado",
+        "mover": "Movendo o cursor",
+        "esquerdo": "Clique esquerdo" if esquerda_junto else "Mirando",
+        "direito": "Clique direito",
+        "duplo": "Clique duplo",
+        "rolagem": f"Rolagem {int(scroll_position)}%",
+        "arraste": "Arrastando",
+    }
+    desenho.text((12, hCam - 46), estados.get(gesto_atual, "Aguardando a mão"), font=_fonte(14), fill=(255, 255, 255))
+    desenho.text((12, hCam - 26), f"{int(fps)} quadros/s    q para sair", font=_fonte(13), fill=(180, 180, 180))
+    return cv2.cvtColor(np.asarray(imagem), cv2.COLOR_RGB2BGR)
+
+
+def montar_tela(camera, fps):
+    """Junta a câmera, só com a visão, e o painel de comandos à direita."""
+    tela = np.zeros((hCam, wCam + painel_largura, 3), dtype=np.uint8)
+    tela[:, :wCam] = camera
+    tela[:, wCam:] = desenhar_painel(fps)
+    return tela
 
 
 def usar_gesto(nome):
@@ -837,11 +839,9 @@ while True:
 
     current_time = time.time()
 
-    # Desenha a área útil, com a margem de cima menor
+    # A borda marca a área de detecção. Os comandos ficam no painel, fora dela.
     cv2.rectangle(img, (frameR, frameR_top), (wCam - frameR, hCam - frameR),
                   (255, 0, 255), 2)
-
-    # O nome da área fica na base do retângulo, fora da lista de gestos.
 
     if len(lmList) != 0:
         # Pontas dos dedos
@@ -898,8 +898,6 @@ while True:
             cv2.line(img, index_tip, thumb_tip, (255, 255, 0), 4)
             if drag_start_pos:
                 cv2.line(img, drag_start_pos, index_tip, (255, 255, 0), 2)
-            cv2.putText(img, "ARRASTANDO", (index_tip[0] - 50, index_tip[1] - 40),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 2)
             scroll_active = False
 
         # 1. Movimento: só o indicador levantado
@@ -909,9 +907,6 @@ while True:
             move_active = True
 
             cv2.circle(img, index_tip, 15, (0, 255, 255), cv2.FILLED)
-            cv2.putText(img, "MOVER", (index_tip[0] + 20, index_tip[1] - 20),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2)
-
             scroll_active = False
 
         # 2. Clique esquerdo: indicador e médio abertos movem o cursor.
@@ -933,12 +928,6 @@ while True:
             cv2.circle(img, index_tip, 15, (0, 255, 0), cv2.FILLED)
             cv2.circle(img, middle_tip, 15, (0, 255, 0), cv2.FILLED)
             cv2.line(img, index_tip, middle_tip, (0, 255, 0), 3)
-            cv2.putText(
-                img,
-                "CLIQUE" if junto else "MIRAR",
-                (index_tip[0] - 40, index_tip[1] - 30),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2,
-            )
 
         # 3. Clique direito: indicador, médio e anelar. O mínimo fica fechado.
         elif indicador and medio and anelar and not minimo:
@@ -955,8 +944,6 @@ while True:
             cv2.circle(img, thumb_tip, 15, (0, 100, 255), cv2.FILLED)
             cv2.circle(img, middle_tip, 15, (0, 100, 255), cv2.FILLED)
             cv2.line(img, thumb_tip, middle_tip, (0, 100, 255), 3)
-            cv2.putText(img, "CLIQUE DIREITO", (thumb_tip[0] - 70, thumb_tip[1] - 30),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 100, 255), 2)
 
         # 4. Clique duplo: médio, anelar e mínimo. O indicador fica fechado.
         elif medio and anelar and minimo and not indicador:
@@ -978,8 +965,6 @@ while True:
             cv2.circle(img, middle_tip, 12, (255, 0, 255), cv2.FILLED)
             cv2.circle(img, ring_tip, 12, (255, 0, 255), cv2.FILLED)
             cv2.circle(img, pinky_tip, 12, (255, 0, 255), cv2.FILLED)
-            cv2.putText(img, "CLIQUE DUPLO", (middle_tip[0] - 60, middle_tip[1] - 40),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 255), 2)
 
         # 5. Rolagem: médio e anelar. Suba ou desça a mão.
         elif medio and anelar and not indicador and not minimo:
@@ -990,29 +975,12 @@ while True:
             scroll_position = max(0, min(100, scroll_position))  # Limita entre 0 e 100
 
             # Executa a rolagem, respeitando a zona morta
-            scroll_result = perform_smart_scroll(scroll_position)
+            perform_smart_scroll(scroll_position)
 
             # Retorno visual da rolagem
             cv2.circle(img, middle_tip, 15, (100, 255, 100), cv2.FILLED)
             cv2.circle(img, ring_tip, 15, (100, 255, 100), cv2.FILLED)
             cv2.line(img, middle_tip, ring_tip, (100, 255, 100), 3)
-
-            # Mostra o estado da rolagem
-            if scroll_result == "deadzone":
-                cv2.putText(img, "ZONA MORTA", (middle_tip[0] - 55, middle_tip[1] - 50),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 150, 150), 2)
-                cv2.putText(img, "SEM ROLAGEM", (middle_tip[0] - 55, middle_tip[1] - 30),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 150, 150), 1)
-            elif scroll_result == "up":
-                cv2.putText(img, "ROLAR PARA CIMA", (middle_tip[0] - 70, middle_tip[1] - 50),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (100, 255, 100), 2)
-            elif scroll_result == "down":
-                cv2.putText(img, "ROLAR PARA BAIXO", (middle_tip[0] - 80, middle_tip[1] - 50),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.6, (100, 255, 100), 2)
-
-            cv2.putText(img, f"Posicao: {scroll_position:.1f}%", (middle_tip[0] - 50, middle_tip[1] - 70),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-
             scroll_active = True
 
         else:
@@ -1023,12 +991,6 @@ while True:
             scroll_active = False
             last_hand = None
 
-        # Mostra, no canto inferior direito, quais dedos estão levantados
-        for i, finger_up in enumerate(fingers):
-            color = (0, 255, 0) if finger_up else (0, 0, 255)
-            cv2.putText(img, str(finger_up), (wCam - 150 + i * 25, hCam - 30),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
-
     else:
         scroll_active = False
         last_hand = None
@@ -1036,27 +998,11 @@ while True:
         if drag_active and current_time - last_drag_seen > drag_hold_grace:
             release_drag("mão perdida")
 
-    # Desenha a barra de rolagem com a zona morta
-    if scroll_active:
-        # Atualiza a posição conforme a altura atual da mão
-        if len(lmList) != 0:
-            hand_center_y = (lmList[12][2] + lmList[16][2]) // 2  # Altura do médio e do anelar
-            scroll_position = np.interp(hand_center_y, (frameR_top, hCam - frameR), (0, 100))
-            scroll_position = max(0, min(100, scroll_position))
+    if scroll_active and len(lmList) != 0:
+        hand_center_y = (lmList[12][2] + lmList[16][2]) // 2  # Altura do médio e do anelar
+        scroll_position = np.interp(hand_center_y, (frameR_top, hCam - frameR), (0, 100))
+        scroll_position = max(0, min(100, scroll_position))
 
-    draw_scroll_bar(img, scroll_position)
-
-    # Desenha o guia de controles
-    draw_controls_guide(img)
-    escrever_textos(img, [(
-        "Área de detecção",
-        frameR + 8,
-        hCam - frameR - 28,
-        (255, 0, 255),
-        16,
-    )])
-
-    # Calcula e mostra os quadros por segundo
     cTime = time.time()
     if cTime - pTime != 0:
         fps = 1 / (cTime - pTime)
@@ -1064,10 +1010,7 @@ while True:
         fps = 0
     pTime = cTime
 
-    cv2.putText(img, f'FPS: {int(fps)}', (wCam - 120, 30),
-                cv2.FONT_HERSHEY_PLAIN, 2, (255, 255, 255), 2)
-
-    if not preview.show(img):
+    if not preview.show(montar_tela(img, fps)):
         log_action("GESTUM ENCERRADO")
         break
 
