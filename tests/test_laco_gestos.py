@@ -266,8 +266,6 @@ def test_janela_cabe_numa_tela_full_hd(gestum):
 # Dependências do sistema
 # --------------------------------------------------------------------------
 
-@pytest.mark.xfail(strict=True, raises=OSError,
-                   reason="BUG-007: sem libei.so.1 o programa quebra em vez de usar o X11")
 def test_sem_libei_o_programa_usa_a_reserva_x11(gestum):
     _, reg, _ = gestum([quadro(MOVER), quadro(MOVER, indicador=(330, 200))], libei_ausente=True)
     assert reg.de_tipo("move")

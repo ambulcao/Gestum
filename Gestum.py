@@ -261,9 +261,10 @@ class PonteiroWayland:
         self.abs = None
         self._seq = 1
         self._sessao = None
-        self.lib = ctypes.CDLL("libei.so.1")
-        self._preparar_biblioteca()
+        self.lib = None
         try:
+            self.lib = ctypes.CDLL("libei.so.1")
+            self._preparar_biblioteca()
             self._conectar()
         except Exception as erro:
             print(f"Cursor do Wayland indisponível: {erro}")
