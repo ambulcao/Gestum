@@ -198,8 +198,12 @@ def test_programa_solta_o_arraste_ao_encerrar(gestum):
 @pytest.mark.parametrize("dedos", [MOVER, ESQUERDO, DIREITO, DUPLO, ROLAGEM],
                          ids=["mover", "esquerdo", "direito", "duplo", "rolagem"])
 def test_arraste_e_solto_ao_passar_para_outro_gesto(gestum, dedos):
-    separado = dict(indicador=(300, 200), medio=(360, 200))
-    roteiro = [pinca()] * 3 + [quadro(dedos, **separado)] * 30  # 1 s no outro gesto
+    # 1 s no outro gesto, com a mão andando (gera movimento) e o médio/anelar
+    # no alto (fora da zona morta da rolagem).
+    roteiro = [pinca()] * 3 + [
+        quadro(dedos, indicador=(300 + i, 200), medio=(360 + i, 100), anelar=(380 + i, 100))
+        for i in range(30)
+    ]
     _, reg, _ = gestum(roteiro)
     # O toggle(False) final vem do encerramento do programa; o esperado é
     # soltar durante o outro gesto, antes de qualquer outro evento de mouse.
