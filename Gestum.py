@@ -888,6 +888,16 @@ while True:
             last_drag_seen = current_time
         holding_drag = drag_active and (pinch_now or current_time - last_drag_seen <= drag_hold_grace)
         mao_aberta = indicador and medio and anelar and minimo
+        outro_comando = (
+            mao_aberta
+            or (indicador and outros_fechados)
+            or (indicador and medio and not minimo)
+            or (medio and anelar and minimo and not indicador)
+            or (medio and anelar and not indicador and not minimo)
+        )
+        if drag_active and not pinch_now and outro_comando:
+            release_drag("outro gesto")
+            holding_drag = False
 
         if mao_aberta:
             usar_gesto("parado")

@@ -192,7 +192,6 @@ def test_programa_solta_o_arraste_ao_encerrar(gestum):
     assert cam.liberada
 
 
-@pytest.mark.xfail(strict=True, reason="BUG-002: botão esquerdo continua preso ao trocar de gesto")
 @pytest.mark.parametrize("dedos", [MOVER, ESQUERDO, DIREITO, DUPLO, ROLAGEM],
                          ids=["mover", "esquerdo", "direito", "duplo", "rolagem"])
 def test_arraste_e_solto_ao_passar_para_outro_gesto(gestum, dedos):

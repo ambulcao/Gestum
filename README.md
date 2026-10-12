@@ -109,7 +109,7 @@ A imagem da câmera não é enviada para fora. Os modelos de mão e de rosto rod
 
 ## Testes
 
-O projeto não tinha testes. Há 93 em `tests/`. Eles simulam câmera, MediaPipe, janela e mouse, então nada foi exercitado com a webcam de verdade. 79 passam e 14 falham de propósito: marcam bugs já conhecidos, para a correção seguir o caderno em `doc/caderno-de-testes.md`.
+O projeto não tinha testes. Há 93 em `tests/`. Eles simulam câmera, MediaPipe, janela e mouse, então nada foi exercitado com a webcam de verdade. 84 passam e 9 falham de propósito: marcam bugs já conhecidos, para a correção seguir o caderno em `doc/caderno-de-testes.md`.
 
 Para rodar:
 
