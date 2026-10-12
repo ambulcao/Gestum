@@ -111,7 +111,6 @@ def test_clique_esquerdo_cai_no_autopy_quando_libei_perde_o_dispositivo(gestum):
     assert reg.cliques("LEFT") == ["LEFT"]
 
 
-@pytest.mark.xfail(strict=True, reason="BUG-005: clique duplo testa ponteiro.ok e não cai no autopy")
 def test_clique_duplo_cai_no_autopy_quando_libei_perde_o_dispositivo(gestum):
     _, reg, _ = gestum([quadro(DUPLO)] * 5, gancho=_libei_ok_sem_dispositivo)
     assert reg.cliques("LEFT") == ["LEFT", "LEFT"]

@@ -991,15 +991,10 @@ while True:
         elif medio and anelar and minimo and not indicador:
             usar_gesto("duplo")
             if gesto_quadros == quadros_para_clicar and current_time - last_double_click > click_cooldown:
-                if ponteiro.ok:
-                    ponteiro.botao(PonteiroWayland.BOTAO_ESQUERDO, True)
-                    ponteiro.botao(PonteiroWayland.BOTAO_ESQUERDO, False)
-                    time.sleep(0.1)
-                    ponteiro.botao(PonteiroWayland.BOTAO_ESQUERDO, True)
-                    ponteiro.botao(PonteiroWayland.BOTAO_ESQUERDO, False)
-                else:
+                if not ponteiro.clique(PonteiroWayland.BOTAO_ESQUERDO):
                     autopy.mouse.click(autopy.mouse.Button.LEFT)
-                    time.sleep(0.1)
+                time.sleep(0.1)
+                if not ponteiro.clique(PonteiroWayland.BOTAO_ESQUERDO):
                     autopy.mouse.click(autopy.mouse.Button.LEFT)
                 last_double_click = current_time
                 log_action("CLIQUE DUPLO")

@@ -8,7 +8,7 @@ As marcas `BUG-001` a `BUG-009` e `M-04` dentro de `tests/` são os itens desta 
 
 | Identificação | Data | O que foi testado | O que foi corrigido | Situação |
 | --- | --- | --- | --- | --- |
-| Bug 001 | 11 out 2026 | 93 testes em `tests/`, com câmera, MediaPipe, janela e mouse simulados. Nada com a webcam. 76 passaram e 17 falharam de propósito. A leitura do código ainda apontou o caminho fixo da fonte Lato, sem teste automático | 001.1: a rolagem usa `scroll_sensitivity`, com no máximo 10 cliques por quadro e 100 por segundo. 001.2: ao sair do arraste para outro gesto, o botão esquerdo é solto antes de mover, clicar ou rolar. 001.3: clique esquerdo, direito e duplo só saem depois de dois quadros na mesma pose. 001.4: a janela fica em 1920×960, com a câmera em dobro e o painel na largura que sobra. 001.5: sem `libei.so.1`, o movimento usa o X11 | Aberto |
+| Bug 001 | 11 out 2026 | 93 testes em `tests/`, com câmera, MediaPipe, janela e mouse simulados. Nada com a webcam. 76 passaram e 17 falharam de propósito. A leitura do código ainda apontou o caminho fixo da fonte Lato, sem teste automático | 001.1: a rolagem usa `scroll_sensitivity`, com no máximo 10 cliques por quadro e 100 por segundo. 001.2: ao sair do arraste para outro gesto, o botão esquerdo é solto antes de mover, clicar ou rolar. 001.3: clique esquerdo, direito e duplo só saem depois de dois quadros na mesma pose. 001.4: a janela fica em 1920×960, com a câmera em dobro e o painel na largura que sobra. 001.5: sem `libei.so.1`, o movimento usa o X11. 001.6: com o cursor do Wayland pausado, o clique duplo usa o X11 | Aberto |
 
 Para rodar a suíte:
 
@@ -16,7 +16,7 @@ Para rodar a suíte:
 python3 -m pytest tests -q -rx
 ```
 
-A suíte termina sem erro enquanto os 5 que restam continuarem falhando pelo motivo registrado. Quando a correção fizer o teste passar, o `strict=True` transforma essa passagem em erro. Retire a marca `xfail` desse teste e atualize a situação do item. Os 88 que já passam devem continuar passando.
+A suíte termina sem erro enquanto os 4 que restam continuarem falhando pelo motivo registrado. Quando a correção fizer o teste passar, o `strict=True` transforma essa passagem em erro. Retire a marca `xfail` desse teste e atualize a situação do item. Os 89 que já passam devem continuar passando.
 
 ## Bug 001
 
@@ -29,7 +29,7 @@ Primeira identificação, feita pelo agente de QA sobre a suíte simulada. Siga 
 | 001.3 | Média | Fechado | A troca de pose não dispara o gesto do quadro intermediário | Clique esquerdo, direito e duplo esperam dois quadros na mesma pose. Um quadro de passagem não clica | `test_passar_de_mover_para_clique_direito_nao_gera_clique_esquerdo`, `test_passar_de_mao_aberta_para_rolagem_nao_gera_clique_duplo` |
 | 001.4 | Média | Fechado | A janela cabe em 1920×1080 | A prévia fica em 1920×960: câmera em 1280×960 e a coluna de comandos na largura que sobra | `test_janela_cabe_numa_tela_full_hd` |
 | 001.5 | Média | Fechado | Sem `libei.so.1`, o movimento usa a reserva do X11 | A falta da biblioteca é capturada e o cursor segue pelo X11 | `test_sem_libei_o_programa_usa_a_reserva_x11` |
-| 001.6 | Média | Aberto | Com a libei conectada e o dispositivo perdido, o clique duplo cai no autopy | O clique duplo olha `ponteiro.ok` e não usa a reserva | `test_clique_duplo_cai_no_autopy_quando_libei_perde_o_dispositivo` |
+| 001.6 | Média | Fechado | Com a libei conectada e o dispositivo perdido, o clique duplo cai no autopy | O clique duplo tenta o Wayland e, se o botão não sai, usa o X11 | `test_clique_duplo_cai_no_autopy_quando_libei_perde_o_dispositivo` |
 | 001.7 | Média | Aberto | Uma falha isolada de leitura segue para o quadro seguinte | O primeiro quadro que falha encerra o programa | `test_falha_isolada_de_leitura_nao_encerra_o_programa` |
 | 001.8 | Média | Aberto | Dispositivo pausado para de emular. Dispositivo removido é descartado | O evento de pausa marca `emulando=True`. O evento de remoção é ignorado. Visto só na simulação | `test_libei_paused_para_de_emular`, `test_libei_removed_descarta_o_dispositivo` |
 | 001.9 | Baixa | Aberto | `/dev/video11` a `/dev/video19` não tomam o lugar de `/dev/video1` | A comparação pelo sufixo `video1` também aceita esses dispositivos. O teste cobre o `video11` | `test_camera_sources_prioridade_nao_confunde_video11` |
@@ -40,7 +40,7 @@ Primeira identificação, feita pelo agente de QA sobre a suíte simulada. Siga 
 1. Leia o teste citado e o trecho de `Gestum.py` que ele exercita. O item 001.10 não tem teste: confira a fonte no código.
 2. Ajuste o programa para o resultado da coluna "O que o teste exige".
 3. Rode `python3 -m pytest tests -q -rx`.
-4. Se o teste do item passou e os outros 88 continuam passando, apague o `@pytest.mark.xfail` desse teste.
+4. Se o teste do item passou e os outros 89 continuam passando, apague o `@pytest.mark.xfail` desse teste.
 5. Rode a suíte outra vez. Ela precisa terminar sem `XPASS`.
 6. Marque a situação do item como Fechado.
 
