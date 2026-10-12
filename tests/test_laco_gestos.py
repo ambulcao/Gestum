@@ -216,7 +216,6 @@ def test_arraste_e_solto_ao_passar_para_outro_gesto(gestum, dedos):
 # Transições entre gestos
 # --------------------------------------------------------------------------
 
-@pytest.mark.xfail(strict=True, reason="BUG-003: pose intermediária dispara clique esquerdo")
 def test_passar_de_mover_para_clique_direito_nao_gera_clique_esquerdo(gestum):
     # Ao levantar médio e anelar, um quadro intermediário mostra só indicador+médio,
     # com as pontas lado a lado (< 40 px).
@@ -225,7 +224,6 @@ def test_passar_de_mover_para_clique_direito_nao_gera_clique_esquerdo(gestum):
     assert reg.cliques("LEFT") == []
 
 
-@pytest.mark.xfail(strict=True, reason="BUG-003: pose intermediária dispara clique duplo")
 def test_passar_de_mao_aberta_para_rolagem_nao_gera_clique_duplo(gestum):
     # Da mão aberta para a rolagem, o indicador pode fechar antes do mínimo.
     _, reg, _ = gestum([quadro(PARADO)] * 3 + [quadro(DUPLO)] + [_rolagem_em(240)] * 5)

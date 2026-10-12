@@ -61,6 +61,8 @@ last_left_click = 0
 last_right_click = 0
 last_double_click = 0
 click_cooldown = 0.3  # 300 ms entre um clique e outro
+quadros_para_clicar = 2  # A pose precisa repetir antes de clicar
+gesto_quadros = 0
 
 # Estado do arraste
 gesto_atual = ""
@@ -702,9 +704,12 @@ def montar_tela(camera, fps):
 
 def usar_gesto(nome):
     """Marca o gesto atual e avisa quando ele acabou de começar."""
-    global gesto_atual
+    global gesto_atual, gesto_quadros
     novo = gesto_atual != nome
+    if novo:
+        gesto_quadros = 0
     gesto_atual = nome
+    gesto_quadros += 1
     return novo
 
 
@@ -943,12 +948,13 @@ while True:
             move_active = True
             distancia = calculate_distance(index_tip, middle_tip)
             junto = distancia < 40
-            if junto and not esquerda_junto and current_time - last_left_click > click_cooldown:
-                if not ponteiro.clique(PonteiroWayland.BOTAO_ESQUERDO):
-                    autopy.mouse.click(autopy.mouse.Button.LEFT)
-                last_left_click = current_time
-                log_action("CLIQUE ESQUERDO")
-            esquerda_junto = junto
+            if gesto_quadros >= quadros_para_clicar:
+                if junto and not esquerda_junto and current_time - last_left_click > click_cooldown:
+                    if not ponteiro.clique(PonteiroWayland.BOTAO_ESQUERDO):
+                        autopy.mouse.click(autopy.mouse.Button.LEFT)
+                    last_left_click = current_time
+                    log_action("CLIQUE ESQUERDO")
+                esquerda_junto = junto
 
             cv2.circle(img, index_tip, 15, (0, 255, 0), cv2.FILLED)
             cv2.circle(img, middle_tip, 15, (0, 255, 0), cv2.FILLED)
@@ -956,7 +962,8 @@ while True:
 
         # 3. Clique direito: indicador, médio e anelar. O mínimo fica fechado.
         elif indicador and medio and anelar and not minimo:
-            if usar_gesto("direito") and current_time - last_right_click > click_cooldown:
+            usar_gesto("direito")
+            if gesto_quadros == quadros_para_clicar and current_time - last_right_click > click_cooldown:
                 if not (
                     ponteiro.botao(PonteiroWayland.BOTAO_DIREITO, True)
                     and ponteiro.botao(PonteiroWayland.BOTAO_DIREITO, False)
@@ -972,7 +979,8 @@ while True:
 
         # 4. Clique duplo: médio, anelar e mínimo. O indicador fica fechado.
         elif medio and anelar and minimo and not indicador:
-            if usar_gesto("duplo") and current_time - last_double_click > click_cooldown:
+            usar_gesto("duplo")
+            if gesto_quadros == quadros_para_clicar and current_time - last_double_click > click_cooldown:
                 if ponteiro.ok:
                     ponteiro.botao(PonteiroWayland.BOTAO_ESQUERDO, True)
                     ponteiro.botao(PonteiroWayland.BOTAO_ESQUERDO, False)

@@ -8,7 +8,7 @@ As marcas `BUG-001` a `BUG-009` e `M-04` dentro de `tests/` são os itens desta 
 
 | Identificação | Data | O que foi testado | O que foi corrigido | Situação |
 | --- | --- | --- | --- | --- |
-| Bug 001 | 11 out 2026 | 93 testes em `tests/`, com câmera, MediaPipe, janela e mouse simulados. Nada com a webcam. 76 passaram e 17 falharam de propósito. A leitura do código ainda apontou o caminho fixo da fonte Lato, sem teste automático | 001.1: a rolagem usa `scroll_sensitivity`, com no máximo 10 cliques por quadro e 100 por segundo. 001.2: ao sair do arraste para outro gesto, o botão esquerdo é solto antes de mover, clicar ou rolar | Aberto |
+| Bug 001 | 11 out 2026 | 93 testes em `tests/`, com câmera, MediaPipe, janela e mouse simulados. Nada com a webcam. 76 passaram e 17 falharam de propósito. A leitura do código ainda apontou o caminho fixo da fonte Lato, sem teste automático | 001.1: a rolagem usa `scroll_sensitivity`, com no máximo 10 cliques por quadro e 100 por segundo. 001.2: ao sair do arraste para outro gesto, o botão esquerdo é solto antes de mover, clicar ou rolar. 001.3: clique esquerdo, direito e duplo só saem depois de dois quadros na mesma pose | Aberto |
 
 Para rodar a suíte:
 
@@ -16,7 +16,7 @@ Para rodar a suíte:
 python3 -m pytest tests -q -rx
 ```
 
-A suíte termina sem erro enquanto os 9 que restam continuarem falhando pelo motivo registrado. Quando a correção fizer o teste passar, o `strict=True` transforma essa passagem em erro. Retire a marca `xfail` desse teste e atualize a situação do item. Os 84 que já passam devem continuar passando.
+A suíte termina sem erro enquanto os 7 que restam continuarem falhando pelo motivo registrado. Quando a correção fizer o teste passar, o `strict=True` transforma essa passagem em erro. Retire a marca `xfail` desse teste e atualize a situação do item. Os 86 que já passam devem continuar passando.
 
 ## Bug 001
 
@@ -26,7 +26,7 @@ Primeira identificação, feita pelo agente de QA sobre a suíte simulada. Siga 
 | --- | --- | --- | --- | --- | --- |
 | 001.1 | Alta | Fechado | No máximo 10 cliques de rodinha por quadro e 100 em um segundo. `scroll_sensitivity` altera essa velocidade | No extremo, `scroll_sensitivity` cliques por quadro (3 com o valor atual), nunca acima de 10, e no máximo 100 na última janela de um segundo | `test_rolagem_no_topo_nao_passa_de_10_cliques_por_quadro`, `test_um_segundo_de_rolagem_maxima_fica_abaixo_de_100_cliques`, `test_scroll_sensitivity_altera_a_velocidade` |
 | 001.2 | Alta | Fechado | Ao sair do arraste para outro gesto, soltar o botão esquerdo antes de mover, clicar ou rolar | O botão é solto no quadro em que a pose deixa de ser a pinça e vira outro comando | `test_arraste_e_solto_ao_passar_para_outro_gesto` (mover, esquerdo, direito, duplo, rolagem) |
-| 001.3 | Média | Aberto | A troca de pose não dispara o gesto do quadro intermediário | Indicador e médio juntos, no caminho para o clique direito, geram clique esquerdo. O clique duplo aparece no caminho da mão aberta para a rolagem | `test_passar_de_mover_para_clique_direito_nao_gera_clique_esquerdo`, `test_passar_de_mao_aberta_para_rolagem_nao_gera_clique_duplo` |
+| 001.3 | Média | Fechado | A troca de pose não dispara o gesto do quadro intermediário | Clique esquerdo, direito e duplo esperam dois quadros na mesma pose. Um quadro de passagem não clica | `test_passar_de_mover_para_clique_direito_nao_gera_clique_esquerdo`, `test_passar_de_mao_aberta_para_rolagem_nao_gera_clique_duplo` |
 | 001.4 | Média | Aberto | A janela cabe em 1920×1080 | A prévia fica em 2120×960 e não pode ser redimensionada | `test_janela_cabe_numa_tela_full_hd` |
 | 001.5 | Média | Aberto | Sem `libei.so.1`, o movimento usa a reserva do X11 | A ausência da biblioteca derruba o programa | `test_sem_libei_o_programa_usa_a_reserva_x11` |
 | 001.6 | Média | Aberto | Com a libei conectada e o dispositivo perdido, o clique duplo cai no autopy | O clique duplo olha `ponteiro.ok` e não usa a reserva | `test_clique_duplo_cai_no_autopy_quando_libei_perde_o_dispositivo` |
@@ -40,7 +40,7 @@ Primeira identificação, feita pelo agente de QA sobre a suíte simulada. Siga 
 1. Leia o teste citado e o trecho de `Gestum.py` que ele exercita. O item 001.10 não tem teste: confira a fonte no código.
 2. Ajuste o programa para o resultado da coluna "O que o teste exige".
 3. Rode `python3 -m pytest tests -q -rx`.
-4. Se o teste do item passou e os outros 84 continuam passando, apague o `@pytest.mark.xfail` desse teste.
+4. Se o teste do item passou e os outros 86 continuam passando, apague o `@pytest.mark.xfail` desse teste.
 5. Rode a suíte outra vez. Ela precisa terminar sem `XPASS`.
 6. Marque a situação do item como Fechado.
 

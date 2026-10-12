@@ -27,9 +27,9 @@ Cada comando é um conjunto de dedos levantados. A mão aberta fica parada. O po
 | --- | --- |
 | Mão aberta | Parado. Solta o arraste |
 | Só o indicador | Move o cursor |
-| Indicador e médio | Mira. O clique esquerdo sai uma vez, quando as pontas ficam a menos de 40 px. Afaste para armar de novo |
-| Indicador, médio e anelar | Clique direito, uma vez |
-| Médio, anelar e mínimo | Clique duplo, uma vez |
+| Indicador e médio | Mira. O clique esquerdo sai uma vez, quando as pontas ficam a menos de 40 px, depois de dois quadros nessa pose. Afaste para armar de novo |
+| Indicador, médio e anelar | Clique direito, uma vez, depois de dois quadros nessa pose |
+| Médio, anelar e mínimo | Clique duplo, uma vez, depois de dois quadros nessa pose |
 | Médio e anelar | Rolagem. Mão no alto sobe; mão embaixo desce. Entre 40% e 60% da altura, não rola |
 | Indicador e polegar, os outros fechados | Arraste. A pinça começa abaixo de 50 px e se mantém até 90 px |
 
@@ -109,7 +109,7 @@ A imagem da câmera não é enviada para fora. Os modelos de mão e de rosto rod
 
 ## Testes
 
-O projeto não tinha testes. Há 93 em `tests/`. Eles simulam câmera, MediaPipe, janela e mouse, então nada foi exercitado com a webcam de verdade. 84 passam e 9 falham de propósito: marcam bugs já conhecidos, para a correção seguir o caderno em `doc/caderno-de-testes.md`.
+O projeto não tinha testes. Há 93 em `tests/`. Eles simulam câmera, MediaPipe, janela e mouse, então nada foi exercitado com a webcam de verdade. 86 passam e 7 falham de propósito: marcam bugs já conhecidos, para a correção seguir o caderno em `doc/caderno-de-testes.md`.
 
 Para rodar:
 
